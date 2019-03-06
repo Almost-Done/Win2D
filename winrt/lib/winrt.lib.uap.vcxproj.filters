@@ -466,6 +466,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)svg\CanvasSvgStrokeDashArrayAttribute.cpp">
       <Filter>svg</Filter>
     </ClCompile>
+    <ClCompile Include="c-interface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)pch.h" />
