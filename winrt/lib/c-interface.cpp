@@ -67,3 +67,26 @@ STDAPI getCanvasLinearGradientBrush(void* rendererUnknown,
     *canvasLinearGradientBrushUnknown = linearGradientBrush.Detach();
     return S_OK;
 }
+
+STDAPI createCanvasBitmapFromBytes(void* rendererUnknown,
+                                   unsigned int byteCount,
+                                   unsigned char* bytes,
+                                   int width,
+                                   int height,
+                                   ABI::Windows::Graphics::DirectX::DirectXPixelFormat pixelFormat,
+                                   void** canvasBitmapUnknown)
+{
+    auto renderer = reinterpret_cast<ABI::Microsoft::Graphics::Canvas::CanvasRenderTarget*>(rendererUnknown);
+
+    auto canvasFactory = Make<ABI::Microsoft::Graphics::Canvas::CanvasBitmapFactory>();
+    if (!canvasFactory) {
+        return E_FAIL;
+    }
+
+    ABI::Microsoft::Graphics::Canvas::ICanvasBitmap* canvasBitmapPtr = nullptr;
+    const auto result = canvasFactory->CreateFromBytes(renderer, byteCount, bytes, width, height, pixelFormat, &canvasBitmapPtr);
+
+    *canvasBitmapUnknown = canvasBitmapPtr;
+
+    return result;
+}
