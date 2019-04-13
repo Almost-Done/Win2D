@@ -1,5 +1,8 @@
 #include "pch.h"
 #include <brushes/CanvasLinearGradientBrush.h>
+#include <geometry/CanvasPathBuilder.h>
+#include <geometry/CanvasGeometry.h>
+#include <text/CanvasTextLayout.h>
 
 STDAPI getSharedDevice(void** deviceUnknown)
 {
@@ -84,9 +87,72 @@ STDAPI createCanvasBitmapFromBytes(void* rendererUnknown,
     }
 
     ABI::Microsoft::Graphics::Canvas::ICanvasBitmap* canvasBitmapPtr = nullptr;
-    const auto result = canvasFactory->CreateFromBytes(renderer, byteCount, bytes, width, height, pixelFormat, &canvasBitmapPtr);
+    const auto result =
+        canvasFactory->CreateFromBytes(renderer, byteCount, bytes, width, height, pixelFormat, &canvasBitmapPtr);
 
     *canvasBitmapUnknown = canvasBitmapPtr;
 
     return result;
+}
+
+STDAPI getCanvasPathBuilder(void* sessionUnknown, void** canvasPathBuilderUnknown)
+{
+    auto session = reinterpret_cast<ABI::Microsoft::Graphics::Canvas::CanvasDrawingSession*>(sessionUnknown);
+
+    auto canvasPathBuilderFactory = Make<ABI::Microsoft::Graphics::Canvas::CanvasPathBuilderFactory>();
+    if (!canvasPathBuilderFactory) {
+        return E_FAIL;
+    }
+
+    ABI::Microsoft::Graphics::Canvas::ICanvasPathBuilder* canvasPathBuilder;
+    if (FAILED(canvasPathBuilderFactory->Create(session, &canvasPathBuilder))) {
+        return E_FAIL;
+    }
+
+    *canvasPathBuilderUnknown = canvasPathBuilder;
+    return S_OK;
+}
+
+STDAPI getCanvasTextLayout(void* sessionUnknown,
+	const wchar_t* text,
+	void* canvasTextFormatUnknown,
+	float width,
+	float height,
+	void** canvasPathBuilderUnknown)
+{
+	auto session = reinterpret_cast<ABI::Microsoft::Graphics::Canvas::CanvasDrawingSession*>(sessionUnknown);
+	auto canvasTextFormat = reinterpret_cast<ABI::Microsoft::Graphics::Canvas::CanvasTextFormat*>(canvasTextFormatUnknown);
+
+	auto result = ABI::Microsoft::Graphics::Canvas::Text::CanvasTextLayout::CreateNew(session, HStringReference(text).Get(), canvasTextFormat, width, height);
+
+	*canvasPathBuilderUnknown = result.Detach();
+	
+	return S_OK;
+}
+
+STDAPI getCanvasStrokeStyle(void** canvasStrokeStyleUnknown)
+{
+	auto canvasStrokeStyle = Make<ABI::Microsoft::Graphics::Canvas::CanvasStrokeStyle>();
+    if (!canvasStrokeStyle) {
+        return E_FAIL;
+    }
+
+    *canvasStrokeStyleUnknown = canvasStrokeStyle.Detach();
+    return S_OK;
+}
+
+STDAPI canvasGeometryCreatePath(void* pathUnknown, void** canvasGeometryUnknown)
+{
+	auto canvasGeometryFactory = Make<ABI::Microsoft::Graphics::Canvas::Geometry::CanvasGeometryFactory>();
+    if (!canvasGeometryFactory) {
+        return E_FAIL;
+    }
+
+	auto path = reinterpret_cast<ABI::Microsoft::Graphics::Canvas::ICanvasPathBuilder*>(pathUnknown);
+
+	ABI::Microsoft::Graphics::Canvas::ICanvasGeometry* canvasGeometry;
+	canvasGeometryFactory->CreatePath(path, &canvasGeometry);
+
+    *canvasGeometryUnknown = canvasGeometry;
+    return S_OK;
 }
